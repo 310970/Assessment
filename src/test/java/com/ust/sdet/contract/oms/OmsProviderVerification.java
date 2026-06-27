@@ -18,7 +18,7 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSe
 import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 
 @Provider("oms-provider")
-@PactBroker   // ✅ IMPORTANT: NO URL HERE
+@PactBroker   // ✅ NO URL HERE (IMPORTANT FIX)
 public class OmsProviderVerification {
 
     @RegisterExtension
@@ -53,28 +53,6 @@ public class OmsProviderVerification {
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                                 {"id":123,"status":"CONFIRMED","total":12.0}
-                        """)));
-    }
-
-    @State("Order created for inventory")
-    void createOrder() {
-        wireMock.stubFor(com.github.tomakehurst.wiremock.client.WireMock.post("/orders/123")
-                .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
-                        .withStatus(201)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {"sku":"SKU-9","quantity":20}
-                        """)));
-    }
-
-    @State("Sku-9 has stock")
-    void inventory() {
-        wireMock.stubFor(com.github.tomakehurst.wiremock.client.WireMock.get("/Inventory/7")
-                .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {"id":7,"status":"Confirmed","total":42}
                         """)));
     }
 }

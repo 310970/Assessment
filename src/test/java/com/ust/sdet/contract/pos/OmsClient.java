@@ -1,19 +1,17 @@
 package com.ust.sdet.contract.pos;
 
+import static io.restassured.RestAssured.given;
 import io.restassured.response.Response;
 
-import static io.restassured.RestAssured.given;
-
-public final class OmsClient {
+final class OmsClient {
 
     private final String baseUrl;
 
-    public OmsClient(String url) {
+    OmsClient(String url) {
         this.baseUrl = url;
     }
 
-    // ---------------- GET ORDER ----------------
-    public Order getOrder(int id) {
+    Order getOrder(int id) {
 
         Response response =
                 given()
@@ -29,13 +27,12 @@ public final class OmsClient {
         );
     }
 
-    // ---------------- CREATE ORDER ----------------
-    public CreateOrder createOrder(String sku, int quantity) {
+    CreateOrder createOrder(String sku, int quantity) {
 
         String jsonBody = """
                 {
-                  "sku": "%s",
-                  "quantity": %d
+                  "sku":"%s",
+                  "quantity":%d
                 }
                 """.formatted(sku, quantity);
 
@@ -50,12 +47,11 @@ public final class OmsClient {
         return new CreateOrder(
                 response.statusCode(),
                 response.path("sku"),
-                ((Number) response.path("quantity")).intValue()
+                response.path("quantity")
         );
     }
 
-    // ---------------- GET INVENTORY ----------------
-    public Inventory getInventory(int id) {
+    Order getInventory(int id) {
 
         Response response =
                 given()
@@ -63,7 +59,7 @@ public final class OmsClient {
                         .when()
                         .get("/Inventory/" + id);
 
-        return new Inventory(
+        return new Order(
                 response.statusCode(),
                 ((Number) response.path("id")).intValue(),
                 response.path("status"),
@@ -71,25 +67,6 @@ public final class OmsClient {
         );
     }
 
-    // ---------------- RECORDS ----------------
-
-    public record Order(
-            int statusCode,
-            int orderId,
-            String status,
-            double total
-    ) {}
-
-    public record CreateOrder(
-            int statusCode,
-            String sku,
-            int quantity
-    ) {}
-
-    public record Inventory(
-            int statusCode,
-            int id,
-            String status,
-            double total
-    ) {}
+    record Order(int statuscode, int orderId, String status, double total) {}
+    record CreateOrder(int statuscode, String sku, int quantity) {}
 }
