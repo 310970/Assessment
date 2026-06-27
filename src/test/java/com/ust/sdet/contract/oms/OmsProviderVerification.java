@@ -18,7 +18,7 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSe
 import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 
 @Provider("oms-provider")
-@PactBroker   // ✅ NO URL HERE (IMPORTANT FIX)
+@PactBroker(url = "${pact.broker.url}")   // ✅ FIXED (NO host error)
 public class OmsProviderVerification {
 
     @RegisterExtension
@@ -46,13 +46,17 @@ public class OmsProviderVerification {
     }
 
     @State("Order 123 exists")
-    void orderExists() {
-        wireMock.stubFor(com.github.tomakehurst.wiremock.client.WireMock.get("/orders/123")
-                .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {"id":123,"status":"CONFIRMED","total":12.0}
-                        """)));
+    void setupOrder() {
+        wireMock.stubFor(
+                com.github.tomakehurst.wiremock.client.WireMock.get("/orders/123")
+                        .willReturn(
+                                com.github.tomakehurst.wiremock.client.WireMock.aResponse()
+                                        .withStatus(200)
+                                        .withHeader("Content-Type", "application/json")
+                                        .withBody("""
+                                                {"id":123,"status":"CONFIRMED","total":12.0}
+                                        """)
+                        )
+        );
     }
 }

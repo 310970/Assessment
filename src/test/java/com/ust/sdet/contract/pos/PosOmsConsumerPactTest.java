@@ -23,7 +23,7 @@ class PosOmsConsumerPactTest {
 
         return builder
                 .given("Order 123 exists")
-                .uponReceiving("get order 123")
+                .uponReceiving("GET order 123")
                 .path("/orders/123")
                 .method("GET")
                 .willRespondWith()
@@ -41,7 +41,7 @@ class PosOmsConsumerPactTest {
 
         OmsClient client = new OmsClient(mockServer.getUrl());
 
-        OmsClient.Order order = client.getOrder(123);
+        var order = client.getOrder(123);
 
         assertEquals(200, order.statuscode());
         assertEquals(123, order.orderId());

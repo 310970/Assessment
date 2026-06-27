@@ -29,7 +29,7 @@ final class OmsClient {
 
     CreateOrder createOrder(String sku, int quantity) {
 
-        String jsonBody = """
+        String body = """
                 {
                   "sku":"%s",
                   "quantity":%d
@@ -40,7 +40,7 @@ final class OmsClient {
                 given()
                         .baseUri(baseUrl)
                         .contentType("application/json")
-                        .body(jsonBody)
+                        .body(body)
                         .when()
                         .post("/orders/123");
 
