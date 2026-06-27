@@ -6,10 +6,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>week4</artifactId>
+    <artifactId>week4Assessment</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+
 
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -17,35 +18,28 @@
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- Test frameworks -->
+        <!-- Test Versions -->
         <junit.jupiter.version>5.11.4</junit.jupiter.version>
         <rest.assured.version>6.0.0</rest.assured.version>
-
-        <!-- Tools -->
-        <selenium.version>4.45.0</selenium.version>
-        <selenide.version>7.16.2</selenide.version>
         <wiremock.version>3.13.2</wiremock.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <jackson.version>2.18.2</jackson.version>
 
         <!-- Pact -->
         <pact.version>4.6.20</pact.version>
+
+        <!-- PactFlow (IMPORTANT) -->
         <pact.broker.url>https://fake-bcfd95cd.pactflow.io</pact.broker.url>
 
-        <git.sha>local</git.sha>
         <pact.verifier.publishResults>true</pact.verifier.publishResults>
         <pact.provider.branch>main</pact.provider.branch>
 
-        <pact.publish.consumer.version>${project.version}</pact.publish.consumer.version>
-        <pact.publish.consumer.branchName>main</pact.publish.consumer.branchName>
+        <git.sha>local</git.sha>
 
-        <networknt.schema.version>1.5.9</networknt.schema.version>
-        <maven.surefire.version>3.5.6</maven.surefire.version>
     </properties>
 
     <dependencies>
 
-        <!-- REST Assured -->
+        <!-- REST ASSURED -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
@@ -53,22 +47,7 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>json-schema-validator</artifactId>
-            <version>${rest.assured.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Jackson -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- JUnit 5 -->
+        <!-- JUNIT 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -83,7 +62,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- WireMock -->
+        <!-- WIREMOCK -->
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock</artifactId>
@@ -91,7 +70,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Pact Consumer -->
+        <!-- PACT CONSUMER -->
         <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
             <artifactId>junit5</artifactId>
@@ -99,7 +78,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Pact Provider -->
+        <!-- PACT PROVIDER -->
         <dependency>
             <groupId>au.com.dius.pact.provider</groupId>
             <artifactId>junit5</artifactId>
@@ -107,22 +86,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Selenium (optional) -->
-        <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-java</artifactId>
-            <version>${selenium.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.codeborne</groupId>
-            <artifactId>selenide</artifactId>
-            <version>${selenide.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Logging -->
+        <!-- LOGGING -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
@@ -133,9 +97,10 @@
     </dependencies>
 
     <build>
+
         <plugins>
 
-            <!-- Maven Compiler -->
+            <!-- ✅ FORCE JAVA 21 COMPILATION -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -145,11 +110,11 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire -->
+            <!-- TEST RUNNER -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.version}</version>
+                <version>3.5.6</version>
                 <configuration>
                     <systemPropertyVariables>
                         <pact.verifier.publishResults>${pact.verifier.publishResults}</pact.verifier.publishResults>
@@ -159,22 +124,8 @@
                 </configuration>
             </plugin>
 
-            <!-- Pact Maven Plugin -->
-            <plugin>
-                <groupId>au.com.dius.pact.provider</groupId>
-                <artifactId>maven</artifactId>
-                <version>${pact.version}</version>
-                <configuration>
-                    <pactBrokerUrl>${pact.broker.url}</pactBrokerUrl>
-                    <projectVersion>${pact.publish.consumer.version}</projectVersion>
-                    <branchName>${pact.publish.consumer.branchName}</branchName>
-                    <tags>
-                        <tag>pactflow-demo</tag>
-                    </tags>
-                </configuration>
-            </plugin>
-
         </plugins>
+
     </build>
 
 </project>
