@@ -1,66 +1,31 @@
-name: CI
+name: Consumer CI
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  consumer:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # ✅ FIX JAVA VERSION (IMPORTANT)
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: 21
           cache: maven
 
-      # =========================
-      # RUN CONSUMER TESTS
-      # =========================
       - name: Run Consumer Tests
         run: mvn -Dtest=PosOmsConsumerPactTest test
 
-      # =========================
-      # PUBLISH PACTS (PactFlow)
-      # =========================
-      - name: Publish Contracts to PactFlow
+      - name: Publish to PactFlow
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}/target/pacts:/pacts \
-            pactfoundation/pact-cli \
-            broker publish /pacts \
-            --broker-base-url=${{ secrets.PACT_BROKER_URL }} \
-            --broker-token=${{ secrets.PACT_BROKER_TOKEN }} \
-            --consumer-app-version=${{ github.sha }} \
-            --branch=main
-
-      # =========================
-      # PROVIDER VERIFICATION
-      # =========================
-      - name: Run Provider Verification
-        run: |
-          mvn -Dtest=OmsProviderVerification \
-              -Dgit.sha=${{ github.sha }} \
-              -Dpact.broker.url=${{ secrets.PACT_BROKER_URL }} \
-              -Dpact.provider.version=${{ github.sha }} \
-              -Dpact.provider.branch=main \
-              -Dpact.verifier.publishResults=true \
-              test
-
-      # =========================
-      # CAN I DEPLOY (GATING)
-      # =========================
-      - name: Can I Deploy
-        run: |
-          docker run --rm \
-            pactfoundation/pact-cli \
-            broker can-i-deploy \
-            --pacticipant pos-consumer \
-            --version=${{ github.sha }} \
-            --to-environment production \
-            --broker-base-url=${{ secrets.PACT_BROKER_URL }} \
-            --broker-token=${{ secrets.PACT_BROKER_TOKEN }}
+          --network host \
+          -v ${{ github.workspace }}/target/pacts:/pacts \
+          pactfoundation/pact-cli:latest \
+          broker publish /pacts \
+          --broker-base-url=${{ secrets.PACTFLOW_URL }} \
+          --broker-token=${{ secrets.PACTFLOW_TOKEN }} \
+          --consumer-app-version=${{ github.sha }} \
+          --branch=main

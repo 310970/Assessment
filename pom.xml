@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -9,15 +10,30 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.release>21</maven.compiler.release>
-        <pact.version>4.6.20</pact.version>
-        <wiremock.version>3.13.2</wiremock.version>
-        <rest.assured.version>6.0.0</rest.assured.version>
+        <!-- JAVA FIX (IMPORTANT) -->
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Test libs -->
         <junit.jupiter.version>5.11.4</junit.jupiter.version>
+        <rest.assured.version>6.0.0</rest.assured.version>
+
+        <!-- Pact -->
+        <pact.version>4.6.20</pact.version>
+
+        <!-- Default local fallback (CI overrides via secrets) -->
+        <pact.broker.url>http://localhost:9292</pact.broker.url>
+
+        <git.sha>local</git.sha>
+        <pact.verifier.publishResults>true</pact.verifier.publishResults>
+        <pact.provider.branch>main</pact.provider.branch>
     </properties>
 
     <dependencies>
 
+        <!-- REST ASSURED -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
@@ -25,6 +41,7 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- JUNIT 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -39,13 +56,15 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- WIREMOCK -->
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock</artifactId>
-            <version>${wiremock.version}</version>
+            <version>3.13.2</version>
             <scope>test</scope>
         </dependency>
 
+        <!-- PACT CONSUMER -->
         <dependency>
             <groupId>au.com.dius.pact.consumer</groupId>
             <artifactId>junit5</artifactId>
@@ -53,6 +72,7 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- PACT PROVIDER -->
         <dependency>
             <groupId>au.com.dius.pact.provider</groupId>
             <artifactId>junit5</artifactId>
@@ -60,18 +80,59 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- LOGGING -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.17</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+
+            <!-- COMPILER -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.15.0</version>
                 <configuration>
-                    <release>21</release>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
             </plugin>
+
+            <!-- SUREFIRE -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.6</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <pact.broker.url>${pact.broker.url}</pact.broker.url>
+                        <pact.provider.version>${git.sha}</pact.provider.version>
+                        <pact.verifier.publishResults>${pact.verifier.publishResults}</pact.verifier.publishResults>
+                        <pact.provider.branch>${pact.provider.branch}</pact.provider.branch>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <!-- PACT MAVEN PLUGIN -->
+            <plugin>
+                <groupId>au.com.dius.pact.provider</groupId>
+                <artifactId>maven</artifactId>
+                <version>${pact.version}</version>
+                <configuration>
+                    <pactBrokerUrl>${pact.broker.url}</pactBrokerUrl>
+                    <projectVersion>${git.sha}</projectVersion>
+                    <tags>
+                        <tag>main</tag>
+                    </tags>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 

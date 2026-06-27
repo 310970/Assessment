@@ -1,49 +1,36 @@
 name: Provider CI
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
+on: [push, pull_request]
 
 jobs:
   provider:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Java 21
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
+          cache: maven
 
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            maven-${{ runner.os }}
-
-      # 1. Run Provider Verification
       - name: Run Provider Verification
         run: |
-          mvn \
-          -Dtest=OmsProviderVerification \
-          -Dpact.broker.url=${{ secrets.PACTFLOW_BASE_URL }} \
-          -Dpact.verifier.publishResults=true \
-          -Dpact.provider.version=${{ github.sha }} \
-          test
+          mvn -Dtest=OmsProviderVerification \
+              -Dpact.broker.url=${{ secrets.PACTFLOW_URL }} \
+              -Dpact.broker.token=${{ secrets.PACTFLOW_TOKEN }} \
+              -Dgit.sha=${{ github.sha }} \
+              -Dpact.verifier.publishResults=true \
+              test
 
-      # 2. Can I Deploy (Provider check)
-      - name: Can I Deploy (Provider)
+      - name: Can I Deploy
         run: |
           docker run --rm \
+          --network host \
           pactfoundation/pact-cli:latest \
           broker can-i-deploy \
-          --pacticipant oms-provider \
+          --pacticipant pos-consumer \
           --version=${{ github.sha }} \
-          --broker-base-url=${{ secrets.PACTFLOW_BASE_URL }} \
+          --broker-base-url=${{ secrets.PACTFLOW_URL }} \
           --broker-token=${{ secrets.PACTFLOW_TOKEN }}
