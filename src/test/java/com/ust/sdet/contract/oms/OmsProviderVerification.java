@@ -1,5 +1,13 @@
 package com.ust.sdet.contract.oms;
 
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+
 import au.com.dius.pact.provider.junit5.HttpTestTarget;
 import au.com.dius.pact.provider.junit5.PactVerificationContext;
 import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
@@ -9,18 +17,8 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
 import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-
 @Provider("oms-provider")
-@PactBroker
+@PactBroker   // ✅ IMPORTANT: NO URL HERE
 public class OmsProviderVerification {
 
     @RegisterExtension
@@ -49,34 +47,34 @@ public class OmsProviderVerification {
 
     @State("Order 123 exists")
     void orderExists() {
-        wireMock.stubFor(get(urlEqualTo("/orders/123"))
-                .willReturn(aResponse()
+        wireMock.stubFor(com.github.tomakehurst.wiremock.client.WireMock.get("/orders/123")
+                .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                            {"id":123,"status":"CONFIRMED","total":12.0}
+                                {"id":123,"status":"CONFIRMED","total":12.0}
                         """)));
     }
 
     @State("Order created for inventory")
     void createOrder() {
-        wireMock.stubFor(post(urlEqualTo("/orders/123"))
-                .willReturn(aResponse()
+        wireMock.stubFor(com.github.tomakehurst.wiremock.client.WireMock.post("/orders/123")
+                .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                            {"sku":"SKU-9","quantity":20}
+                                {"sku":"SKU-9","quantity":20}
                         """)));
     }
 
     @State("Sku-9 has stock")
-    void stock() {
-        wireMock.stubFor(get(urlEqualTo("/Inventory/7"))
-                .willReturn(aResponse()
+    void inventory() {
+        wireMock.stubFor(com.github.tomakehurst.wiremock.client.WireMock.get("/Inventory/7")
+                .willReturn(com.github.tomakehurst.wiremock.client.WireMock.aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                            {"id":7,"status":"Confirmed","total":42}
+                                {"id":7,"status":"Confirmed","total":42}
                         """)));
     }
 }
