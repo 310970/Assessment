@@ -1,161 +1,95 @@
 package com.ust.sdet.contract.pos;
 
+import io.restassured.response.Response;
 
 import static io.restassured.RestAssured.given;
 
-
-import io.restassured.response.Response;
-
-
-
-final class OmsClient {
-
+public final class OmsClient {
 
     private final String baseUrl;
 
-
-
-    OmsClient(String url){
-
+    public OmsClient(String url) {
         this.baseUrl = url;
-
     }
 
-
-
-
-
-    Order getOrder(int id){
-
+    // ---------------- GET ORDER ----------------
+    public Order getOrder(int id) {
 
         Response response =
                 given()
                         .baseUri(baseUrl)
-
                         .when()
                         .get("/orders/" + id);
 
-
         return new Order(
-
                 response.statusCode(),
-
                 ((Number) response.path("id")).intValue(),
-
                 response.path("status"),
-
                 ((Number) response.path("total")).doubleValue()
-
         );
-
     }
 
+    // ---------------- CREATE ORDER ----------------
+    public CreateOrder createOrder(String sku, int quantity) {
 
-
-
-
-
-    CreateOrder createOrder(
-            String sku,
-            int quantity
-    ){
-
-
-
-        String jsonBody =
-                """
+        String jsonBody = """
                 {
-                  "sku":"%s",
-                  "quantity":%d
+                  "sku": "%s",
+                  "quantity": %d
                 }
-                """.formatted(
-                        sku,
-                        quantity
-                );
-
-
-
+                """.formatted(sku, quantity);
 
         Response response =
                 given()
                         .baseUri(baseUrl)
                         .contentType("application/json")
                         .body(jsonBody)
-
                         .when()
                         .post("/orders/123");
 
-
-
-
-
         return new CreateOrder(
-
                 response.statusCode(),
-
                 response.path("sku"),
-
-                response.path("quantity")
-
+                ((Number) response.path("quantity")).intValue()
         );
-
     }
 
-
-
-
-
-
-
-    Order getInventory(int id){
-
+    // ---------------- GET INVENTORY ----------------
+    public Inventory getInventory(int id) {
 
         Response response =
                 given()
-
                         .baseUri(baseUrl)
-
                         .when()
-
                         .get("/Inventory/" + id);
 
-
-
-        return new Order(
-
+        return new Inventory(
                 response.statusCode(),
-
                 ((Number) response.path("id")).intValue(),
-
                 response.path("status"),
-
                 ((Number) response.path("total")).doubleValue()
-
         );
-
     }
 
+    // ---------------- RECORDS ----------------
 
-
-
-
-
-    record Order(
-            int statuscode,
+    public record Order(
+            int statusCode,
             int orderId,
             String status,
             double total
-    ){}
+    ) {}
 
-
-
-
-
-    record CreateOrder(
-            int statuscode,
+    public record CreateOrder(
+            int statusCode,
             String sku,
             int quantity
-    ){}
+    ) {}
 
-
+    public record Inventory(
+            int statusCode,
+            int id,
+            String status,
+            double total
+    ) {}
 }

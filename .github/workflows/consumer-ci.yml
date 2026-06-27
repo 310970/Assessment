@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Project
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -27,32 +27,29 @@ jobs:
           restore-keys: |
             maven-${{ runner.os }}
 
-      - name: Start Pact Broker
-        run: |
-          docker compose -f src/test/java/com/ust/sdet/docker/docker-compose.pact-broker.yml up -d
-
-      - name: Wait for Broker
-        run: sleep 20
-
+      # 1. Run Consumer Pact Tests (GENERATES PACT FILE)
       - name: Run Consumer Pact Tests
         run: mvn -Dtest=PosOmsConsumerPactTest test
 
-      - name: Publish Pact
+      # 2. Publish Pact to PactFlow
+      - name: Publish Pact to PactFlow
         run: |
           docker run --rm \
-          --network host \
           -v ${{ github.workspace }}/target/pacts:/pacts \
           pactfoundation/pact-cli:latest \
           broker publish /pacts \
-          --broker-base-url=http://127.0.0.1:9292 \
-          --consumer-app-version=${{ github.sha }}
+          --broker-base-url=${{ secrets.PACTFLOW_BASE_URL }} \
+          --broker-token=${{ secrets.PACTFLOW_TOKEN }} \
+          --consumer-app-version=${{ github.sha }} \
+          --tag main
 
-      - name: Can I Deploy
+      # 3. Can I Deploy (Consumer check)
+      - name: Can I Deploy (Consumer)
         run: |
           docker run --rm \
-          --network host \
           pactfoundation/pact-cli:latest \
           broker can-i-deploy \
           --pacticipant pos-consumer \
           --version=${{ github.sha }} \
-          --broker-base-url=http://127.0.0.1:9292
+          --broker-base-url=${{ secrets.PACTFLOW_BASE_URL }} \
+          --broker-token=${{ secrets.PACTFLOW_TOKEN }}

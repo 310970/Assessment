@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Project
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -27,27 +27,23 @@ jobs:
           restore-keys: |
             maven-${{ runner.os }}
 
-      - name: Start Pact Broker
-        run: |
-          docker compose -f src/test/java/com/ust/sdet/docker/docker-compose.pact-broker.yml up -d
-
-      - name: Wait for Broker
-        run: sleep 20
-
+      # 1. Run Provider Verification
       - name: Run Provider Verification
         run: |
           mvn \
           -Dtest=OmsProviderVerification \
-          -Dpact.broker.url=http://127.0.0.1:9292 \
+          -Dpact.broker.url=${{ secrets.PACTFLOW_BASE_URL }} \
           -Dpact.verifier.publishResults=true \
+          -Dpact.provider.version=${{ github.sha }} \
           test
 
-      - name: Can I Deploy
+      # 2. Can I Deploy (Provider check)
+      - name: Can I Deploy (Provider)
         run: |
           docker run --rm \
-          --network host \
           pactfoundation/pact-cli:latest \
           broker can-i-deploy \
           --pacticipant oms-provider \
           --version=${{ github.sha }} \
-          --broker-base-url=http://127.0.0.1:9292
+          --broker-base-url=${{ secrets.PACTFLOW_BASE_URL }} \
+          --broker-token=${{ secrets.PACTFLOW_TOKEN }}
