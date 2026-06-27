@@ -1,0 +1,53 @@
+name: Provider CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  provider:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}
+
+      - name: Start Pact Broker
+        run: |
+          docker compose -f src/test/java/com/ust/sdet/docker/docker-compose.pact-broker.yml up -d
+
+      - name: Wait for Broker
+        run: sleep 20
+
+      - name: Run Provider Verification
+        run: |
+          mvn \
+          -Dtest=OmsProviderVerification \
+          -Dpact.broker.url=http://127.0.0.1:9292 \
+          -Dpact.verifier.publishResults=true \
+          test
+
+      - name: Can I Deploy
+        run: |
+          docker run --rm \
+          --network host \
+          pactfoundation/pact-cli:latest \
+          broker can-i-deploy \
+          --pacticipant oms-provider \
+          --version=${{ github.sha }} \
+          --broker-base-url=http://127.0.0.1:9292

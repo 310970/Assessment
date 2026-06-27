@@ -1,0 +1,58 @@
+name: Consumer CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  consumer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}
+
+      - name: Start Pact Broker
+        run: |
+          docker compose -f src/test/java/com/ust/sdet/docker/docker-compose.pact-broker.yml up -d
+
+      - name: Wait for Broker
+        run: sleep 20
+
+      - name: Run Consumer Pact Tests
+        run: mvn -Dtest=PosOmsConsumerPactTest test
+
+      - name: Publish Pact
+        run: |
+          docker run --rm \
+          --network host \
+          -v ${{ github.workspace }}/target/pacts:/pacts \
+          pactfoundation/pact-cli:latest \
+          broker publish /pacts \
+          --broker-base-url=http://127.0.0.1:9292 \
+          --consumer-app-version=${{ github.sha }}
+
+      - name: Can I Deploy
+        run: |
+          docker run --rm \
+          --network host \
+          pactfoundation/pact-cli:latest \
+          broker can-i-deploy \
+          --pacticipant pos-consumer \
+          --version=${{ github.sha }} \
+          --broker-base-url=http://127.0.0.1:9292
