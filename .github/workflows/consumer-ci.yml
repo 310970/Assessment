@@ -1,31 +1,36 @@
-name: Consumer CI
+name: consumerCI
 
 on: [push, pull_request]
 
 jobs:
-  consumer:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: 00. Checkout Code
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - name: 0. Set up Java
+        uses: actions/setup-java@v5
         with:
-          distribution: temurin
-          java-version: 21
-          cache: maven
+          distribution: 'temurin'
+          java-version: '22'
+          cache: 'maven'
 
-      - name: Run Consumer Tests
-        run: mvn -Dtest=PosOmsConsumerPactTest test
-
-      - name: Publish to PactFlow
+      - name: 0. Install Pact CLI
         run: |
-          docker run --rm \
-          --network host \
-          -v ${{ github.workspace }}/target/pacts:/pacts \
-          pactfoundation/pact-cli:latest \
-          broker publish /pacts \
-          --broker-base-url=${{ secrets.PACTFLOW_URL }} \
-          --broker-token=${{ secrets.PACTFLOW_TOKEN }} \
-          --consumer-app-version=${{ github.sha }} \
-          --branch=main
+          curl -fsSL https://github.com/pact-foundation/pact-ruby-standalone/releases/download/v2.4.5/pact-2.4.5-linux-x86_64.tar.gz | tar xz -C $HOME
+          echo "$HOME/pact/bin" >> $GITHUB_PATH
+
+      - name: 2. Run Consumer Tests & Publish Contracts
+        working-directory: pact-week4
+        run: |
+          mvn -Dtest=ConsumerPactTest test
+
+      - name: 3. Consumer Publish Contracts to the Borker
+        working-directory: pact-week4
+        run: |
+          mvn pact:publish \
+          -Dpact.broker.url=https://rockstar.pactflow.io \
+          -Dpact.broker.token=xdlxxgO3kq-b9ps3ih_eKQ \
+          -Dpact.consumer.version=1.0.0
